@@ -1,6 +1,6 @@
 package org.traffic.model;
 
-public enum LaneDirection {
+public enum TurnDirection {
     LEFT,
     STRAIGHT,
     RIGHT

@@ -20,7 +20,7 @@ public class TrafficSimulator {
                 var vehicle = command.toVehicle();
                 intersection.addVehicle(vehicle);
             } else if (command.type() == CommandType.STEP) {
-                var currentStepVehicleIds = intersection.makeStepAndGetVehicles();
+                var currentStepVehicleIds = intersection.makeStepAndGetVehicleIds();
                 stepStatuses.add(new StepStatus(currentStepVehicleIds));
             } else {
                 System.err.println("Bad command type: " + command.type());

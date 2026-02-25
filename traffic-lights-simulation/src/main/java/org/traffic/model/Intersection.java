@@ -3,6 +3,8 @@ package org.traffic.model;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class Intersection {
@@ -16,11 +18,21 @@ public class Intersection {
     }
 
     public void addVehicle(@NotNull Vehicle vehicle) {
-        roadMap.get(vehicle.startRoad()).addVehicle(vehicle);
+        Road road = roadMap.get(vehicle.getStartRoad());
+        road.addVehicle(vehicle);
     }
 
-    // TODO
-//    public List<String> makeStepAndGetVehicles() {
-//
-//    }
+    public List<String> makeStepAndGetVehicleIds() {
+        List<Vehicle> vehiclesLeavingIntersection = new LinkedList<>();
+        for (Road road : roadMap.values()) {
+            List<Vehicle> vehiclesLeavingRoad = road.processStep();
+            vehiclesLeavingIntersection.addAll(vehiclesLeavingRoad);
+        }
+
+        List<String> vehicleIds = new LinkedList<>();
+        for (Vehicle vehicle : vehiclesLeavingIntersection)
+            vehicleIds.add(vehicle.getVehicleId());
+
+        return vehicleIds;
+    }
 }

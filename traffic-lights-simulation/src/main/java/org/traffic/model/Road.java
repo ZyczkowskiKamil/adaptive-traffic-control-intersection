@@ -2,15 +2,13 @@ package org.traffic.model;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Road {
 
     private final List<Lane> lanes;
     private final Direction roadLocation;
+    private final RoadTrafficLights trafficLights;
 
     /**
      * Create road with one lane that can go in all directions
@@ -19,6 +17,7 @@ public class Road {
     public Road(Direction roadLocation) {
         this.lanes = new ArrayList<>(List.of(new Lane(LaneType.LEFT_STRAIGHT_RIGHT, roadLocation)));
         this.roadLocation = roadLocation;
+        this.trafficLights = new RoadTrafficLights();
     }
 
     /**
@@ -40,7 +39,7 @@ public class Road {
      * </p>
      * @param direction Direction where lane is going
      */
-    public void addLane(LaneDirection direction) {
+    public void addLane(TurnDirection direction) {
         switch (direction) {
             case LEFT -> {
                 if (lanes.stream()
@@ -93,14 +92,23 @@ public class Road {
      */
     public void addVehicle(@NotNull Vehicle vehicle) {
         lanes.stream()
-                .filter(lane -> lane.canMoveTo(vehicle.endRoad()))
+                .filter(lane -> lane.canMoveFromLaneTo(vehicle.getEndRoad()))
                 .min(Comparator
                         .comparingInt(Lane::vehiclesNumber)
                         .thenComparing(lane -> lane.getType().getPriority())
                 )
                 .ifPresentOrElse(
                     lane -> lane.addVehicle(vehicle),
-                     () -> System.err.println("Line not found from " + this.roadLocation + " to " + vehicle.endRoad())
+                     () -> System.err.println("Line not found from " + this.roadLocation + " to " + vehicle.getEndRoad())
                 );
+    }
+
+    public List<Vehicle> processStep() {
+        List<Vehicle> vehiclesLeavingRoad = new LinkedList<>();
+        for (Lane lane : lanes) {
+            Optional<Vehicle> vehicle = lane.moveIfPossibleAndGetVehicle(trafficLights);
+            vehicle.ifPresent(vehiclesLeavingRoad::add);
+        }
+        return vehiclesLeavingRoad;
     }
 }

@@ -17,7 +17,7 @@ public class Lane {
         this.laneLocation = laneLocation;
     }
 
-    public boolean canMoveTo(Direction destination) {
+    public boolean canMoveFromLaneTo(Direction destination) {
         int startIndex = this.laneLocation.getIndex();
         int endIndex = destination.getIndex();
 
@@ -37,8 +37,14 @@ public class Lane {
         this.vehicles.add(vehicle);
     }
 
-    public Optional<Vehicle> moveAndGetVehicle() {
-        return Optional.ofNullable(vehicles.poll());
+    public Optional<Vehicle> moveIfPossibleAndGetVehicle(RoadTrafficLights trafficLights) {
+        Vehicle frontVehicle = vehicles.peek();
+
+        if (frontVehicle != null && frontVehicle.hasGreenLight(trafficLights)) {
+            return Optional.ofNullable(vehicles.poll());
+        }
+
+        return Optional.empty();
     }
 
     public int vehiclesNumber() {
