@@ -2,8 +2,8 @@ package org.traffic.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.traffic.model.SimulationInput;
-import org.traffic.model.SimulationOutput;
+import org.traffic.model.dto.SimulationInput;
+import org.traffic.model.dto.SimulationOutput;
 
 import java.io.File;
 import java.io.IOException;

@@ -35,4 +35,18 @@ public class Intersection {
 
         return vehicleIds;
     }
+
+    public int getCarsNumberThatCanLeaveIntersection(LightPhase lightPhase) {
+        int carsThatCanLeave = 0;
+        for (Road road : roadMap.values()) {
+            carsThatCanLeave += road.getCarsNumberThatCanGo(lightPhase);
+        }
+        return carsThatCanLeave;
+    }
+
+    public void updateLights(LightPhase lightPhase, LightTransitionState lightState) {
+        for (Road road : roadMap.values()) {
+            road.updateTrafficLights(lightPhase, lightState);
+        }
+    }
 }

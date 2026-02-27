@@ -146,3 +146,7 @@ replay_pid*
 traffic-lights-simulation/.idea/
 target/
 **/target/
+
+
+traffic-lights-simulation/input.json
+traffic-lights-simulation/output.json

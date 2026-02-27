@@ -58,4 +58,31 @@ public class Lane {
     public void setType(LaneType type) {
         this.type = type;
     }
+
+    private boolean canAllCarsGoOnLightPhase(LightSet lightSet) {
+        TrafficLightColor G = TrafficLightColor.GREEN;
+        return switch (type) {
+            case LEFT -> lightSet.leftLight() == G;
+            case STRAIGHT -> lightSet.straightLight() == G;
+            case RIGHT -> lightSet.rightLight() == G;
+            case LEFT_STRAIGHT -> lightSet.leftLight() == G && lightSet.straightLight() == G;
+            case STRAIGHT_RIGHT -> lightSet.straightLight() == G && lightSet.rightLight() == G;
+            case LEFT_STRAIGHT_RIGHT -> lightSet.leftLight() == G && lightSet.straightLight() == G && lightSet.rightLight() == G;
+        };
+    }
+
+    public int numberOfCarsThatCanGoOnLightSet(LightSet lightSet) {
+        if (canAllCarsGoOnLightPhase(lightSet))
+            return this.vehiclesNumber();
+
+        int vehiclesNumber = 0;
+        for (Vehicle vehicle : vehicles) {
+            var turnDirection = vehicle.getTurnDirection();
+            if (lightSet.getColorInDirection(turnDirection) != TrafficLightColor.GREEN)
+                break; // first car that can't move(blocking way)
+            vehiclesNumber++;
+        }
+
+        return vehiclesNumber;
+    }
 }

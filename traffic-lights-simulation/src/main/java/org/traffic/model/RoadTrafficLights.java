@@ -13,27 +13,29 @@ public class RoadTrafficLights {
         };
     }
 
-    public TrafficLightColor getLeftColor() {
-        return leftColor;
-    }
+    public void setLights(LightSet lightSet, LightTransitionState lightsState) {
+        switch (lightsState) {
+            case ACTIVE -> {
+                this.leftColor = lightSet.leftLight();
+                this.straightColor = lightSet.straightLight();
+                this.rightColor = lightSet.rightLight();
+            }
+            case TRANSITION_TO_RED -> {
+                this.leftColor = (lightSet.leftLight()==TrafficLightColor.GREEN) ? TrafficLightColor.YELLOW : TrafficLightColor.RED;
+                this.straightColor = (lightSet.straightLight()==TrafficLightColor.GREEN) ? TrafficLightColor.YELLOW : TrafficLightColor.RED;
+                this.rightColor = (lightSet.rightLight()==TrafficLightColor.GREEN) ? TrafficLightColor.YELLOW : TrafficLightColor.RED;
+            }
+            case ALL_RED -> {
+                this.leftColor = TrafficLightColor.RED;
+                this.straightColor = TrafficLightColor.RED;
+                this.rightColor = TrafficLightColor.RED;
+            }
+            case TRANSITION_TO_GREEN -> {
+                this.leftColor = (lightSet.leftLight()==TrafficLightColor.GREEN) ? TrafficLightColor.RED_YELLOW : TrafficLightColor.RED;
+                this.straightColor = (lightSet.straightLight()==TrafficLightColor.GREEN) ? TrafficLightColor.RED_YELLOW : TrafficLightColor.RED;
+                this.rightColor = (lightSet.rightLight()==TrafficLightColor.GREEN) ? TrafficLightColor.RED_YELLOW : TrafficLightColor.RED;
+            }
+        }
 
-    public TrafficLightColor getStraightColor() {
-        return straightColor;
-    }
-
-    public TrafficLightColor getRightColor() {
-        return rightColor;
-    }
-
-    public void setLeftColor(TrafficLightColor leftColor) {
-        this.leftColor = leftColor;
-    }
-
-    public void setStraightColor(TrafficLightColor straightColor) {
-        this.straightColor = straightColor;
-    }
-
-    public void setRightColor(TrafficLightColor rightColor) {
-        this.rightColor = rightColor;
     }
 }

@@ -1,7 +1,9 @@
-package org.traffic.model;
+package org.traffic.model.dto;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.traffic.model.Direction;
+import org.traffic.model.Vehicle;
 
 import java.util.Objects;
 

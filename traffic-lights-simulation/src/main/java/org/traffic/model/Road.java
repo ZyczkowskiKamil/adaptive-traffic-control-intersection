@@ -103,6 +103,11 @@ public class Road {
                 );
     }
 
+    public void updateTrafficLights(LightPhase lightPhase, LightTransitionState lightState) {
+        LightSet lightSet = lightPhase.getLightSetFor(this.roadLocation);
+        this.trafficLights.setLights(lightSet, lightState);
+    }
+
     public List<Vehicle> processStep() {
         List<Vehicle> vehiclesLeavingRoad = new LinkedList<>();
         for (Lane lane : lanes) {
@@ -110,5 +115,20 @@ public class Road {
             vehicle.ifPresent(vehiclesLeavingRoad::add);
         }
         return vehiclesLeavingRoad;
+    }
+
+    public Direction getRoadLocation() {
+        return roadLocation;
+    }
+
+    public int getCarsNumberThatCanGo(LightPhase lightPhase) {
+        LightSet lightSet = lightPhase.getLightSetFor(this.roadLocation);
+        int carsThatCanGo = 0;
+
+        for (Lane lane : lanes) {
+            carsThatCanGo += lane.numberOfCarsThatCanGoOnLightSet(lightSet);
+        }
+
+        return carsThatCanGo;
     }
 }
