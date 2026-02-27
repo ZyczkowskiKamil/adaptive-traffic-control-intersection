@@ -1,11 +1,9 @@
 package org.traffic.service;
 
-import org.traffic.model.*;
 import org.traffic.model.dto.*;
+import org.traffic.model.infrastructure.Intersection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 public class TrafficSimulator {

@@ -1,4 +1,6 @@
-package org.traffic.model;
+package org.traffic.model.trafficlight;
+
+import org.traffic.model.infrastructure.TurnDirection;
 
 public class RoadTrafficLights {
     private TrafficLightColor leftColor = TrafficLightColor.RED;

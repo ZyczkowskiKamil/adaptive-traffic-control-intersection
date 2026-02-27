@@ -1,4 +1,4 @@
-package org.traffic.model;
+package org.traffic.model.infrastructure;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

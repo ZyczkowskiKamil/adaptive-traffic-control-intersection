@@ -1,4 +1,4 @@
-package org.traffic.model;
+package org.traffic.model.infrastructure;
 
 public enum TurnDirection {
     LEFT,

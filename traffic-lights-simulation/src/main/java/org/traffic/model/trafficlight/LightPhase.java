@@ -1,6 +1,8 @@
-package org.traffic.model;
+package org.traffic.model.trafficlight;
 
-import static org.traffic.model.LightSet.*;
+import org.traffic.model.infrastructure.Direction;
+
+import static org.traffic.model.trafficlight.LightSet.*;
 
 public enum LightPhase {
     NS_STRAIGHT_RIGHT   (STRAIGHT_RIGHT_GREEN, ALL_RED, STRAIGHT_RIGHT_GREEN, ALL_RED),

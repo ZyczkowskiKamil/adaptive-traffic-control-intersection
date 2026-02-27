@@ -1,8 +1,8 @@
 package org.traffic.service;
 
-import org.traffic.model.Intersection;
-import org.traffic.model.LightTransitionState;
-import org.traffic.model.LightPhase;
+import org.traffic.model.infrastructure.Intersection;
+import org.traffic.model.trafficlight.LightTransitionState;
+import org.traffic.model.trafficlight.LightPhase;
 
 public class TrafficLightsService {
     private static final int MIN_ACTIVE_PHASE_TIME = 3;

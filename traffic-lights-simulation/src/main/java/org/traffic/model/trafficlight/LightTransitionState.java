@@ -1,4 +1,4 @@
-package org.traffic.model;
+package org.traffic.model.trafficlight;
 
 public enum LightTransitionState {
     ACTIVE,

@@ -1,6 +1,11 @@
-package org.traffic.model;
+package org.traffic.model.infrastructure;
 
 import org.jetbrains.annotations.NotNull;
+import org.traffic.model.trafficlight.LightPhase;
+import org.traffic.model.trafficlight.LightSet;
+import org.traffic.model.trafficlight.LightTransitionState;
+import org.traffic.model.trafficlight.RoadTrafficLights;
+import org.traffic.model.vehicle.Vehicle;
 
 import java.util.*;
 

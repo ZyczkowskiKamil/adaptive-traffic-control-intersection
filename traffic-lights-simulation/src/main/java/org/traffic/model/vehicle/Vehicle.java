@@ -1,6 +1,9 @@
-package org.traffic.model;
+package org.traffic.model.vehicle;
 
 import org.jetbrains.annotations.NotNull;
+import org.traffic.model.infrastructure.Direction;
+import org.traffic.model.infrastructure.TurnDirection;
+import org.traffic.model.trafficlight.RoadTrafficLights;
 
 import java.util.Objects;
 
