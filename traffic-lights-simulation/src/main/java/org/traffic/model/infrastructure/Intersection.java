@@ -52,4 +52,9 @@ public class Intersection {
             road.updateTrafficLights(lightPhase, lightState);
         }
     }
+
+    public void addLaneToRoad(Direction roadPosition, TurnDirection turnDirection) {
+        Road road = roadMap.get(roadPosition);
+        road.addLane(turnDirection);
+    }
 }

@@ -23,16 +23,10 @@ public class TrafficSimulator {
 
         for (Command command : input.commands()) {
             if (command.type() == CommandType.ADD_VEHICLE) {
-                System.out.println("ADD");
                 handleAddVehicle(command);
             } else if (command.type() == CommandType.STEP) {
-                System.out.println("STEP");
                 List<String> leavingVehiclesIds = handleStepAndGetLeavingVehiclesIds();
                 stepStatuses.add(new StepStatus(leavingVehiclesIds));
-
-                for (String id : leavingVehiclesIds) {
-                    System.out.println(id + " ");
-                }
             } else {
                 System.err.println("Bad command type: " + command.type());
             }
