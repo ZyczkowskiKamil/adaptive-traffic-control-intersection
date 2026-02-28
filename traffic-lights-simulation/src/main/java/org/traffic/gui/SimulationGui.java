@@ -20,6 +20,8 @@ public class SimulationGui extends Application {
         Parent root = loader.load();
         SimulationController controller = loader.getController();
 
+        controller.setStage(primaryStage);
+
         primaryStage.setTitle("Traffic light simulator");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();

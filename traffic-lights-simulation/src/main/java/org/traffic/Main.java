@@ -4,6 +4,7 @@ import javafx.application.Application;
 import org.traffic.gui.SimulationGui;
 import org.traffic.model.dto.SimulationInput;
 import org.traffic.model.dto.SimulationOutput;
+import org.traffic.model.infrastructure.Intersection;
 import org.traffic.service.TrafficSimulator;
 import org.traffic.utils.SimulationParser;
 
@@ -37,12 +38,12 @@ public class Main {
 
         try {
             SimulationInput simulationInput = parser.parseInput(inputPath);
-            var simulator = new TrafficSimulator();
+            var simulator = new TrafficSimulator(new Intersection());
 
             SimulationOutput simulationOutput = simulator.runSimulation(simulationInput);
 
             parser.saveOutput(outputPath, simulationOutput);
-        } catch (IOException e) { // TODO - better exception handling
+        } catch (IOException e) {
             System.err.println("IO Error: " + e.getMessage());
             e.printStackTrace();
         }

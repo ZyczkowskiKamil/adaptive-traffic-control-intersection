@@ -30,4 +30,13 @@ public record Command(
 
         return new Vehicle(vehicleId, startRoad, endRoad);
     }
+
+    public static Command fromVehicle(Vehicle vehicle) {
+        return new Command(
+                CommandType.ADD_VEHICLE,
+                vehicle.getVehicleId(),
+                vehicle.getStartRoad(),
+                vehicle.getEndRoad()
+        );
+    }
 }

@@ -13,8 +13,8 @@ public class TrafficSimulator {
 
     private int simulationTime = 0;
 
-    public TrafficSimulator() {
-        this.intersection = new Intersection();
+    public TrafficSimulator(Intersection intersection) {
+        this.intersection = intersection;
         this.trafficLightsService = new TrafficLightsService(intersection);
     }
 
@@ -31,8 +31,6 @@ public class TrafficSimulator {
                 System.err.println("Bad command type: " + command.type());
             }
         }
-
-
 
         return new SimulationOutput(stepStatuses);
     }

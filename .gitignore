@@ -148,5 +148,4 @@ target/
 **/target/
 
 
-traffic-lights-simulation/input.json
-traffic-lights-simulation/output.json
+traffic-lights-simulation/*.json

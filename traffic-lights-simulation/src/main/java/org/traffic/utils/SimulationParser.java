@@ -1,12 +1,15 @@
 package org.traffic.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.traffic.model.dto.Command;
 import org.traffic.model.dto.SimulationInput;
 import org.traffic.model.dto.SimulationOutput;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class SimulationParser {
 
@@ -26,5 +29,9 @@ public class SimulationParser {
 
     public void saveOutput(String filePath, SimulationOutput output) throws IOException {
         mapper.writeValue(new File(filePath), output);
+    }
+
+    public String toJsonString(SimulationInput simulationInput) throws JsonProcessingException {
+        return mapper.writeValueAsString(simulationInput);
     }
 }
