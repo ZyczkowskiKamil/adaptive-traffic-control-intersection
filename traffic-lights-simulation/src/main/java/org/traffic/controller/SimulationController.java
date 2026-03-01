@@ -1,7 +1,6 @@
 package org.traffic.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,7 +10,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.traffic.model.dto.Command;
 import org.traffic.model.dto.SimulationInput;
-import org.traffic.model.dto.SimulationOutput;
 import org.traffic.model.infrastructure.Direction;
 import org.traffic.model.infrastructure.Intersection;
 import org.traffic.model.infrastructure.TurnDirection;

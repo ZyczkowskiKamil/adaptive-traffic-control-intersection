@@ -1,6 +1,7 @@
 package org.traffic.model.infrastructure;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 import org.traffic.model.trafficlight.LightPhase;
 import org.traffic.model.trafficlight.LightTransitionState;
 import org.traffic.model.vehicle.Vehicle;
@@ -15,13 +16,22 @@ public class Intersection {
     private final Map<Direction, Road> roadMap;
 
     public Intersection() {
-        this.roadMap = new HashMap<>();
+        this(createDefaultRoads());
+    }
+
+    protected Intersection(Map<Direction, Road> roadMap) {
+        this.roadMap = roadMap;
+    }
+
+    private static Map<Direction, Road> createDefaultRoads() {
+        Map<Direction, Road> roads = new HashMap<>();
         for (Direction direction : Direction.values())
-            this.roadMap.put(direction, new Road(direction));
+            roads.put(direction, new Road(direction));
+        return roads;
     }
 
     public void addVehicle(@NotNull Vehicle vehicle) {
-        Road road = roadMap.get(vehicle.getStartRoad());
+        Road road = roadMap.get(vehicle.startRoad());
         road.addVehicle(vehicle);
     }
 
@@ -34,7 +44,7 @@ public class Intersection {
 
         List<String> vehicleIds = new LinkedList<>();
         for (Vehicle vehicle : vehiclesLeavingIntersection)
-            vehicleIds.add(vehicle.getVehicleId());
+            vehicleIds.add(vehicle.vehicleId());
 
         return vehicleIds;
     }

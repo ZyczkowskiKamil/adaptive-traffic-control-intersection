@@ -81,7 +81,7 @@ public class Lane {
 
         int vehiclesNumber = 0;
         for (Vehicle vehicle : vehicles) {
-            var turnDirection = vehicle.getTurnDirection();
+            var turnDirection = vehicle.turnDirection();
             if (lightSet.getColorInDirection(turnDirection) != TrafficLightColor.GREEN)
                 break; // first car that can't move(blocking way)
             vehiclesNumber++;

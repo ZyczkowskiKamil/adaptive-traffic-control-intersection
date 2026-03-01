@@ -97,14 +97,14 @@ public class Road {
      */
     public void addVehicle(@NotNull Vehicle vehicle) {
         lanes.stream()
-                .filter(lane -> lane.canMoveFromLaneTo(vehicle.getEndRoad()))
+                .filter(lane -> lane.canMoveFromLaneTo(vehicle.endRoad()))
                 .min(Comparator
                         .comparingInt(Lane::vehiclesNumber)
                         .thenComparing(lane -> lane.getType().getPriority())
                 )
                 .ifPresentOrElse(
                     lane -> lane.addVehicle(vehicle),
-                     () -> System.err.println("Line not found from " + this.roadLocation + " to " + vehicle.getEndRoad())
+                     () -> System.err.println("Line not found from " + this.roadLocation + " to " + vehicle.endRoad())
                 );
     }
 
@@ -135,5 +135,9 @@ public class Road {
         }
 
         return carsThatCanGo;
+    }
+
+    public List<Lane> getLanes() {
+        return Collections.unmodifiableList(this.lanes);
     }
 }
