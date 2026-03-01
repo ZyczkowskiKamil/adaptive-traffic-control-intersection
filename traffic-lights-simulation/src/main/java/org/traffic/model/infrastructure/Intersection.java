@@ -57,4 +57,13 @@ public class Intersection {
         Road road = roadMap.get(roadPosition);
         road.addLane(turnDirection);
     }
+
+    public void addLanesToRoad(Map<Direction, List<TurnDirection>> lanesMap) {
+        for (Direction roadPosition : lanesMap.keySet()) {
+            List<TurnDirection> turnList = lanesMap.get(roadPosition);
+
+            for (TurnDirection turnDirection : turnList)
+                this.addLaneToRoad(roadPosition, turnDirection);
+        }
+    }
 }

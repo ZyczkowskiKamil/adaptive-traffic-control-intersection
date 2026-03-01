@@ -36,7 +36,7 @@ public class CommandListCell extends ListCell<Command> {
 
             switch (command.type()) {
                 case STEP -> commandDetailsLabel.setText("");
-                case ADD_VEHICLE -> commandDetailsLabel.setText(command.vehicleId() + " " + command.startRoad() + " " + command.endRoad());
+                case ADD_VEHICLE -> commandDetailsLabel.setText(" id:" + command.vehicleId() + " " + command.startRoad() + " -> " + command.endRoad() + " ");
             }
 
             hbox.getChildren().setAll(commandTypeLabel, commandDetailsLabel, removeBtn);

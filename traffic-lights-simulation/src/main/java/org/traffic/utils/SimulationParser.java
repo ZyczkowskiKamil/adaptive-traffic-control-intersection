@@ -1,5 +1,6 @@
 package org.traffic.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -18,6 +19,7 @@ public class SimulationParser {
     public SimulationParser() {
         this.mapper = new ObjectMapper();
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     public SimulationInput parseInput(String inputFilePath) throws IOException {
@@ -31,7 +33,7 @@ public class SimulationParser {
         mapper.writeValue(new File(filePath), output);
     }
 
-    public String toJsonString(SimulationInput simulationInput) throws JsonProcessingException {
-        return mapper.writeValueAsString(simulationInput);
+    public String toJsonString(Object data) throws JsonProcessingException {
+        return mapper.writeValueAsString(data);
     }
 }

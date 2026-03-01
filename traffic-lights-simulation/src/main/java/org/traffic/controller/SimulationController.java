@@ -6,18 +6,17 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.traffic.model.dto.Command;
 import org.traffic.model.dto.SimulationInput;
+import org.traffic.model.dto.SimulationOutput;
 import org.traffic.model.infrastructure.Direction;
 import org.traffic.model.infrastructure.Intersection;
 import org.traffic.model.infrastructure.TurnDirection;
 import org.traffic.model.vehicle.Vehicle;
+import org.traffic.service.TrafficSimulator;
 import org.traffic.utils.SimulationParser;
 
 import java.io.File;
@@ -25,19 +24,22 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class SimulationController implements Initializable {
 
-    private final Intersection intersection = new Intersection();
     private final SimulationParser simulationParser = new SimulationParser();
+
+    private final ObservableList<Command> commandList = FXCollections.observableArrayList();
+    private final Map<Direction, List<TurnDirection>> lanesToAdd = new HashMap<>();
 
     private Stage stage;
 
-    private ObservableList<Command> commandList = FXCollections.observableArrayList();
-
     @FXML
     private ListView<Command> commandListView;
+
+    @FXML
+    private Label errorLabel;
 
     @FXML
     private ComboBox<String> addLaneDirectionSelector;
@@ -54,12 +56,17 @@ public class SimulationController implements Initializable {
     @FXML
     private TextField addVehicleVehicleId;
 
+    @FXML
+    private TextArea outputTextArea;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         for (Direction roadSide : Direction.values()) {
             addLaneRoadSideSelector.getItems().add(roadSide.toString());
             addVehicleStartRoadSelector.getItems().add(roadSide.toString());
             addVehicleEndRoadSelector.getItems().add(roadSide.toString());
+
+            lanesToAdd.put(roadSide, new LinkedList<>());
         }
 
         for (TurnDirection turnDirection : TurnDirection.values())
@@ -75,26 +82,24 @@ public class SimulationController implements Initializable {
         String laneDirectionString = addLaneDirectionSelector.getValue();
 
         if (roadSideString == null || laneDirectionString == null) {
-            System.err.println("Need to choose road side and lane direction when adding lane");
+            errorLabel.setText("Need to choose road side and lane direction when adding lane");
             return;
         }
 
         Direction roadPosition = Direction.valueOf(roadSideString);
         TurnDirection turnDirection = TurnDirection.valueOf(laneDirectionString);
 
-        this.intersection.addLaneToRoad(roadPosition, turnDirection);
+        lanesToAdd.get(roadPosition).add(turnDirection);
     }
 
     @FXML
     private void handleAddVehicle() {
-        System.out.println("ADD vehicle");
-
         String startRoadString = addVehicleStartRoadSelector.getValue();
         String endRoadString = addVehicleEndRoadSelector.getValue();
         String vehicleId = addVehicleVehicleId.getText();
 
         if (startRoadString == null || endRoadString == null || vehicleId.isEmpty()) {
-            System.err.println("All fields must be selected when adding vehicle");
+            errorLabel.setText("All fields must be selected when adding vehicle");
             return;
         }
 
@@ -105,6 +110,17 @@ public class SimulationController implements Initializable {
         Command command = Command.fromVehicle(vehicle);
 
         this.commandList.add(command);
+    }
+
+    @FXML
+    private void handleAddStep() {
+        Command command = Command.fromStep();
+        this.commandList.add(command);
+    }
+
+    @FXML
+    private void resetErrorMessage() {
+        this.errorLabel.setText("");
     }
 
     @FXML
@@ -125,14 +141,14 @@ public class SimulationController implements Initializable {
 
                 this.commandList.setAll(simulationInput.commands());
             } catch (IOException e) {
+                this.errorLabel.setText("Error while importing configuration file");
                 System.err.println("Error while importing configuration file");
                 e.printStackTrace();
             }
         }
     }
 
-    @FXML
-    private void handleExportSimulationFile() {
+    private void saveJsonStringToFile(String jsonContent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose save destination");
 
@@ -146,21 +162,48 @@ public class SimulationController implements Initializable {
 
         if (fileToSave != null) {
             try {
-                SimulationInput simulationInput = new SimulationInput(commandList);
-                String jsonContent = simulationParser.toJsonString(simulationInput);
-
                 Path path = fileToSave.toPath();
                 Files.writeString(path, jsonContent);
             } catch (IOException e) {
-                System.err.println("Error saving file while exporting configuration");
+                this.errorLabel.setText("Error saving json file");
+                System.err.println("Error saving json file");
                 e.printStackTrace();
             }
         }
     }
 
     @FXML
-    private void handleRunSimulation() {
-        System.out.println("RUN");
+    private void handleExportSimulationFile() {
+        try {
+            var simulationInput = new SimulationInput(commandList);
+            String jsonContent = simulationParser.toJsonString(simulationInput);
+
+            saveJsonStringToFile(jsonContent);
+        } catch (JsonProcessingException e) {
+            this.errorLabel.setText("Failed to export configuration");
+            System.err.println("Export simulation file failed");
+        }
+    }
+
+    @FXML
+    private void handleSaveOutput() {
+        String content = this.outputTextArea.toString();
+
+        saveJsonStringToFile(content);
+    }
+
+    @FXML
+    private void handleRunSimulation() throws IOException {
+        var intersection = new Intersection();
+        intersection.addLanesToRoad(lanesToAdd);
+
+        var simulationInput = new SimulationInput(commandList);
+        var simulator = new TrafficSimulator(intersection);
+
+        var simulationOutput = simulator.runSimulation(simulationInput);
+
+        var outputString = simulationParser.toJsonString(simulationOutput);
+        this.outputTextArea.setText(outputString);
     }
 
     public void setStage(Stage stage) {
