@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -34,6 +36,7 @@ public class SimulationController implements Initializable {
     private final ObservableList<Command> commandList = FXCollections.observableArrayList();
     private final Map<Direction, List<TurnDirection>> lanesToAdd = new HashMap<>();
     private final IntegerProperty simulationTime = new SimpleIntegerProperty(0);
+    private final StringProperty outputText = new SimpleStringProperty("");
 
     private Stage stage;
 
@@ -84,6 +87,7 @@ public class SimulationController implements Initializable {
         commandListView.setCellFactory(_ -> new CommandListCell(commandList));
 
         simulationTimeLabel.textProperty().bind(simulationTime.asString());
+        outputTextArea.textProperty().bind(outputText);
     }
 
     @FXML
@@ -197,19 +201,19 @@ public class SimulationController implements Initializable {
 
     @FXML
     private void handleSaveOutput() {
-        String content = this.outputTextArea.toString();
+        String content = this.outputTextArea.getText();
 
         saveJsonStringToFile(content);
     }
 
     @FXML
-    private void handleRunSimulation() throws IOException {
+    private void handleRunSimulation() {
         this.simulationTime.set(0);
         var intersection = new Intersection();
         intersection.addLanesToRoad(lanesToAdd);
 
         var simulationInput = new SimulationInput(new ArrayList<>(commandList));
-        var simulator = new TrafficSimulator(intersection, this.simulationTime);
+        var simulator = new TrafficSimulator(intersection, this.simulationTime, this.outputText);
         var runRealTimeSimulation = this.realTimeSimulationCheckbox.isSelected();
 
         Thread thread = new Thread(() -> {
@@ -218,7 +222,7 @@ public class SimulationController implements Initializable {
                 var outputString = simulationParser.toJsonString(simulationOutput);
 
                 Platform.runLater(() ->
-                        this.outputTextArea.setText(outputString)
+                        this.outputText.set(outputString)
                 );
 
             } catch (JsonProcessingException e) {

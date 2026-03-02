@@ -6,10 +6,7 @@ import org.traffic.model.trafficlight.LightPhase;
 import org.traffic.model.trafficlight.LightTransitionState;
 import org.traffic.model.vehicle.Vehicle;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Intersection {
 
@@ -83,5 +80,9 @@ public class Intersection {
             for (TurnDirection turnDirection : turnList)
                 this.addLaneToRoad(roadPosition, turnDirection);
         }
+    }
+
+    public Map<Direction, Road> getRoadMap() {
+        return Collections.unmodifiableMap(this.roadMap);
     }
 }

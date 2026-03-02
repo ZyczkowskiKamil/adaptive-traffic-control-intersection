@@ -3,6 +3,8 @@ package org.traffic;
 import javafx.application.Application;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import org.traffic.gui.SimulationGui;
 import org.traffic.model.dto.SimulationInput;
 import org.traffic.model.dto.SimulationOutput;
@@ -40,9 +42,10 @@ public class Main {
 
         try {
             IntegerProperty simulationTime = new SimpleIntegerProperty(0);
+            StringProperty outputText = new SimpleStringProperty("");
 
             SimulationInput simulationInput = parser.parseInput(inputPath);
-            var simulator = new TrafficSimulator(new Intersection(), simulationTime);
+            var simulator = new TrafficSimulator(new Intersection(), simulationTime, outputText);
 
             SimulationOutput simulationOutput = simulator.runSimulation(simulationInput, false);
 

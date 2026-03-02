@@ -154,5 +154,12 @@ public class TrafficLightsService {
         intersection.updateLights(this.currentLightPhase, this.lightState);
     }
 
+    public LightTransitionState getLightTransitionState() {
+        return this.lightState;
+    }
+
+    public LightPhase getLightPhase() {
+        return this.currentLightPhase;
+    }
 
 }

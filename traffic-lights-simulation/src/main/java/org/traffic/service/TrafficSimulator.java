@@ -2,12 +2,16 @@ package org.traffic.service;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.StringProperty;
 import org.traffic.model.TickResult;
 import org.traffic.model.dto.*;
+import org.traffic.model.infrastructure.Direction;
 import org.traffic.model.infrastructure.Intersection;
+import org.traffic.model.infrastructure.Road;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class TrafficSimulator {
 
@@ -15,11 +19,13 @@ public class TrafficSimulator {
     private final Intersection intersection;
 
     private final IntegerProperty simulationTime;
+    private final StringProperty outputString;
 
-    public TrafficSimulator(Intersection intersection, IntegerProperty simulationTime) {
+    public TrafficSimulator(Intersection intersection, IntegerProperty simulationTime, StringProperty outputString) {
         this.intersection = intersection;
         this.trafficLightsService = new TrafficLightsService(intersection, simulationTime);
         this.simulationTime = simulationTime;
+        this.outputString = outputString;
     }
 
     public SimulationOutput runSimulation(SimulationInput input, boolean realTimeSimulation) {
@@ -28,6 +34,7 @@ public class TrafficSimulator {
         for (Command command : input.commands()) {
             if (command.type() == CommandType.ADD_VEHICLE) {
                 handleAddVehicle(command);
+                updateOutputString();
             } else if (command.type() == CommandType.STEP) {
                 StepStatus stepStatus = handleStepCommand(realTimeSimulation);
                 stepStatuses.add(stepStatus);
@@ -37,6 +44,35 @@ public class TrafficSimulator {
         }
 
         return new SimulationOutput(stepStatuses);
+    }
+
+    private void updateOutputString() {
+        StringBuilder currentState = new StringBuilder();
+
+        Map<Direction, Road> roadMap = this.intersection.getRoadMap();
+        currentState
+                .append("Phase: ")
+                .append(this.trafficLightsService.getLightPhase())
+                .append(" State: ")
+                .append(this.trafficLightsService.getLightTransitionState())
+                .append('\n');
+        for (Direction direction : roadMap.keySet()) {
+            Road road = roadMap.get(direction);
+
+            currentState
+                    .append(direction.toString())
+                    .append(" ")
+                    .append("Vehicles: ")
+                    .append(road.getVehicleCount())
+                    .append(" lights: ")
+                    .append(road.getLightSet())
+                    .append('\n');
+        }
+
+        this.outputString.setValue(
+                outputString + currentState.toString() + "\n\n"
+        );
+
     }
 
     /**
@@ -85,6 +121,7 @@ public class TrafficSimulator {
             leavingVehicles = intersection.makeStepAndGetVehicleIds();
         }
 
+        updateOutputString();
         sleepIfRealTime(realTimeSimulation);
 
         return new TickResult(leavingVehicles, isLightStateActive, intersection.isEmpty());
