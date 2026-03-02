@@ -33,4 +33,15 @@ public enum LightPhase {
         };
     }
 
+    public LightPhase next() {
+        LightPhase[] phases = LightPhase.values();
+        int nextIndex = (this.ordinal() + 1) % phases.length;
+
+        if (phases[nextIndex] == ALL_DIRECTIONS_STOP) {
+            return phases[0];
+        }
+
+        return phases[nextIndex];
+    }
+
 }

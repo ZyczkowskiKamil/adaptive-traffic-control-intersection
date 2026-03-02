@@ -1,5 +1,6 @@
 package org.traffic.service;
 
+import javafx.beans.property.IntegerProperty;
 import org.traffic.model.dto.*;
 import org.traffic.model.infrastructure.Intersection;
 
@@ -11,11 +12,12 @@ public class TrafficSimulator {
     private final TrafficLightsService trafficLightsService;
     private final Intersection intersection;
 
-    private int simulationTime = 0;
+    private final IntegerProperty simulationTime;
 
-    public TrafficSimulator(Intersection intersection) {
+    public TrafficSimulator(Intersection intersection, IntegerProperty simulationTime) {
         this.intersection = intersection;
-        this.trafficLightsService = new TrafficLightsService(intersection);
+        this.trafficLightsService = new TrafficLightsService(intersection, simulationTime);
+        this.simulationTime = simulationTime;
     }
 
     public SimulationOutput runSimulation(SimulationInput input) {
@@ -25,7 +27,7 @@ public class TrafficSimulator {
             if (command.type() == CommandType.ADD_VEHICLE) {
                 handleAddVehicle(command);
             } else if (command.type() == CommandType.STEP) {
-                List<String> leavingVehiclesIds = handleStepAndGetLeavingVehiclesIds();
+                List<String> leavingVehiclesIds = handleStepCommandAndGetLeavingVehiclesIds();
                 stepStatuses.add(new StepStatus(leavingVehiclesIds));
             } else {
                 System.err.println("Bad command type: " + command.type());
@@ -40,7 +42,7 @@ public class TrafficSimulator {
         intersection.addVehicle(vehicle);
     }
 
-    private List<String> handleStepAndGetLeavingVehiclesIds() {
+    private List<String> handleStepCommandAndGetLeavingVehiclesIds() {
         do {
             trafficLightsService.handleSimulationStep();
             increaseSimulationTime(1);
@@ -50,7 +52,7 @@ public class TrafficSimulator {
     }
 
     public void increaseSimulationTime(int time) {
-        this.simulationTime += time;
+        this.simulationTime.set(this.simulationTime.get() + time);
     }
 
 

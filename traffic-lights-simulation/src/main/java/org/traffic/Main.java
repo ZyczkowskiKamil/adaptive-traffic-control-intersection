@@ -1,6 +1,8 @@
 package org.traffic;
 
 import javafx.application.Application;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import org.traffic.gui.SimulationGui;
 import org.traffic.model.dto.SimulationInput;
 import org.traffic.model.dto.SimulationOutput;
@@ -37,12 +39,16 @@ public class Main {
         var parser = new SimulationParser();
 
         try {
+            IntegerProperty simulationTime = new SimpleIntegerProperty(0);
+
             SimulationInput simulationInput = parser.parseInput(inputPath);
-            var simulator = new TrafficSimulator(new Intersection());
+            var simulator = new TrafficSimulator(new Intersection(), simulationTime);
 
             SimulationOutput simulationOutput = simulator.runSimulation(simulationInput);
 
             parser.saveOutput(outputPath, simulationOutput);
+
+            System.out.println("Simulation time: " + simulationTime);
         } catch (IOException e) {
             System.err.println("IO Error: " + e.getMessage());
             e.printStackTrace();

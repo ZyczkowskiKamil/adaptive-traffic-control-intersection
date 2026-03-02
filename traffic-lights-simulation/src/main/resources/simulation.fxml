@@ -35,11 +35,11 @@
                               </StackPane>
                               <StackPane prefWidth="400.0">
                                  <children>
-                                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Simulation time: x">
+                                    <Label fx:id="simulationTimeLabel" text="Label">
                                        <font>
-                                          <Font size="19.0" />
+                                          <Font name="System Bold" size="18.0" />
                                        </font>
-                                    </Text>
+                                    </Label>
                                  </children>
                               </StackPane>
                            </children>

@@ -52,22 +52,29 @@ An intelligent traffic light simulation system for a 4-way intersection that dyn
 
 ### Traffic Light Adaptation Strategy
 
-The system uses a **greedy traffic-responsive algorithm** that evaluates all possible light phases and selects one that would allow the most vehicles to proceed:
+The system uses a **lane phase importance formula** that evaluates all possible light phases and selects one that would allow the most vehicles to proceed:
 
 1. **Phase Evaluation**: At each simulation step during an active phase:
-   - Calculate how many vehicles can proceed in each possible light phase
-   - Count vehicles across all compatible lanes for each phase
+   - Calculate each phase importance based on formula:
+       - `(a * W1) + (b * W2) + W3`
+       - `a` - how many cars can go in light phase
+       - `b` - time passed from when phase was last active
+       - `W1` - weight of number of cars
+       - `W2` - weight of phase wait time
+       - `W3` - weight of stability - prevents switch when just one car comes
 
 2. **Phase Selection**: 
-   - Choose the phase with the maximum number of vehicles ready to go
-   - If current phase has most vehicles, it remains active
-   - If another phase has more vehicles, initiate transition
+   - `MIN_ACTIVE_PHASE_TIME` - prevents rapid switching
+   - `MAX_ACTIVE_PHASE_TIME` - ensures other phases can be choosen when one has lots of cars
+   - If not enought time passed keep current phase
+   - If too much time passed - ensures that other phase is choosen
+   - Selects phase with highest importance value
 
 3. **Safe Transitions**: When changing phases:
-   - **Transition to Red** (3 units): Yellow lights warn vehicles to stop
-   - **All Red Phase** (2 units): Clearance interval ensures intersection is empty
-   - **Transition to Green** (3 units): New direction's green lights activate
-   - **Active Phase**: Vehicles proceed through intersection (1 unit per vehicle)
+   - **Transition to Red** (3 time units): Yellow lights warn vehicles to stop
+   - **All Red Phase** (2 time units): Clearance interval ensures intersection is empty
+   - **Transition to Green** (3 time units): New direction's green lights activate
+   - **Active Phase**: Vehicles proceed through intersection (1 time unit per vehicle)
 
 4. **Phase Timing Constraints**:
    - Minimum active phase: 3 time units (prevents switching too fast)
@@ -81,7 +88,7 @@ The system uses a **greedy traffic-responsive algorithm** that evaluates all pos
   - Filter lanes that allow the vehicle's destination
   - Select the lane with the fewest vehicles
   - Prioritize more specialized lanes (e.g., LEFT lane over LEFT_STRAIGHT for left turns)
-- **Conflict Prevention**: Lane types enforce valid turn movements based on cardinal directions
+- **Conflict Prevention**: Lane types enforce valid turn movements based on cardinal directions, each light phase has not colliding ways
 
 ### Light Phases
 
@@ -251,5 +258,7 @@ The `Main` class - launches the program in CLI or GUI mode depending on selected
 List of thing to consider:
 - Better test coverage(currently around 35%)
 - Better name for Direction - maybe for CardinalDirection?
-- Add vehicle waiting time to calculate next traffic lights phase
-- Better exception handling
+- Improve GUI
+- Better exception handling:
+  - Loading wrong file as input
+  - Adding vehicle going to it's start road(e.g. NORTH -> NORTH)

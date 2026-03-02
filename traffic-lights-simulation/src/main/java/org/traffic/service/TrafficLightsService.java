@@ -1,8 +1,12 @@
 package org.traffic.service;
 
+import javafx.beans.property.IntegerProperty;
 import org.traffic.model.infrastructure.Intersection;
 import org.traffic.model.trafficlight.LightTransitionState;
 import org.traffic.model.trafficlight.LightPhase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TrafficLightsService {
     private static final int MIN_ACTIVE_PHASE_TIME = 3;
@@ -12,44 +16,100 @@ public class TrafficLightsService {
     private static final int ALL_RED_TIME = 2;
     private static final int TRANSITION_TO_GREEN_TIME = 3;
 
+    private static final int ALGORITHM_CAR_WEIGHT = 10;
+    private static final int ALGORITHM_WAIT_TIME_WEIGHT = 1;
+    private static final int ALGORITHM_LIGHT_STABILITY_BONUS = 30;
 
     private static final LightPhase BEGINNING_LIGHT_PHASE = LightPhase.NS_STRAIGHT_RIGHT;
     private static final LightTransitionState BEGINNING_LIGHT_STATE = LightTransitionState.ACTIVE;
 
+    private final IntegerProperty simulationTime;
+
     private final Intersection intersection;
-    private LightPhase lightPhase;
+    private LightPhase currentLightPhase;
     private LightPhase nextLightPhase;
     private LightTransitionState lightState;
 
     private int currentPhaseTimer = 0;
     private int transitionTime = 0;
 
-    public TrafficLightsService(Intersection intersection) {
-        this.intersection = intersection;
+    private final Map<LightPhase,Integer> lightPhaseLastTimeActive;
 
-        this.lightPhase = BEGINNING_LIGHT_PHASE;
+    public TrafficLightsService(Intersection intersection, IntegerProperty simulationTime) {
+        this.intersection = intersection;
+        this.simulationTime = simulationTime;
+
+        this.currentLightPhase = BEGINNING_LIGHT_PHASE;
         this.lightState = BEGINNING_LIGHT_STATE;
         this.nextLightPhase = null;
         intersection.updateLights(BEGINNING_LIGHT_PHASE, BEGINNING_LIGHT_STATE);
+
+        lightPhaseLastTimeActive = new HashMap<>();
+        for (LightPhase lightPhase : LightPhase.values())
+            lightPhaseLastTimeActive.put(lightPhase, 0);
     }
 
     /**
-     * Choose light phase that currently most cars can go
-     * @return
+     * Choose light phase based on number of cars and time when light phase was last active
+     * <p>
+     *     It ensured fairness - every phase will go (one phase with lots of cars will finally change - no starvation)
+     *     Prevents rapid switching between lights - MIN_ACTIVE_PHASE_TIME
+     *
+     *
+     * </p>
      */
-    private LightPhase calculateNextLightPhase() {
-        LightPhase bestLightPhase = LightPhase.NS_STRAIGHT_RIGHT;
-        int bestPhaseCarsNumber = -1;
+    private void calculateNextLightPhase() {
+        if (currentPhaseTimer < MIN_ACTIVE_PHASE_TIME) {
+            this.nextLightPhase = null;
+            return;
+        }
+
+        LightPhase bestLightPhase = this.currentLightPhase.next(); // to ensure light switching when no cars are detected
+        int bestLightPhaseImportance = 0;
+
+        boolean isMaxTimeForCurrentPhaseExceeded = (currentPhaseTimer > MAX_ACTIVE_PHASE_TIME);
 
         for (LightPhase lightPhase : LightPhase.values()) {
-            int lightPhaseCarsNumber = intersection.getCarsNumberThatCanLeaveIntersection(lightPhase);
-            if (lightPhaseCarsNumber > bestPhaseCarsNumber) {
-                bestPhaseCarsNumber = lightPhaseCarsNumber;
+            if (isMaxTimeForCurrentPhaseExceeded && lightPhase == currentLightPhase)
+                continue;
+
+            int importance = this.calculateImportanceForLightPhase(lightPhase);
+
+
+            if (importance > bestLightPhaseImportance) {
+                bestLightPhaseImportance = importance;
                 bestLightPhase = lightPhase;
             }
         }
 
-        return bestLightPhase;
+        if (bestLightPhase != this.currentLightPhase)
+            this.nextLightPhase = bestLightPhase;
+        else
+            this.nextLightPhase = null;
+    }
+
+    /**
+     * Calculate importance of changing to lightPhase based on number of cars, last time lightPhase was active and if it is current light phase
+     * <p>
+     *     importance = (carsNumber * weight1) + (timeSinceLastActive * weight2) + light_stability_bonus
+     *     light_stability_bonus - to not switch back and forth when there is one or two cars difference
+     * </p>
+     */
+    private int calculateImportanceForLightPhase(LightPhase lightPhase) {
+        if (lightPhase == LightPhase.ALL_DIRECTIONS_STOP)
+            return 0;
+
+        int carsWaiting = intersection.getCarsNumberThatCanLeaveIntersection(lightPhase);
+        int phaseWaitTime = this.lightPhaseTimeFromLastActive(lightPhase);
+
+        int stabilityBonus = (lightPhase == this.currentLightPhase) ? ALGORITHM_LIGHT_STABILITY_BONUS : 0;
+
+        return (carsWaiting * ALGORITHM_CAR_WEIGHT) + (phaseWaitTime * ALGORITHM_WAIT_TIME_WEIGHT) + stabilityBonus;
+    }
+
+    private int lightPhaseTimeFromLastActive(LightPhase lightPhase) {
+        int lastActive = lightPhaseLastTimeActive.get(lightPhase);
+        return this.simulationTime.get() - lastActive;
     }
 
     /**
@@ -61,8 +121,9 @@ public class TrafficLightsService {
      */
     public void handleSimulationStep() {
         if (this.lightState == LightTransitionState.ACTIVE) {
+            lightPhaseLastTimeActive.put(currentLightPhase, simulationTime.get());
             currentPhaseTimer++;
-            this.nextLightPhase = calculateNextLightPhase();
+            calculateNextLightPhase();
         }
 
         if (this.nextLightPhase != null) {
@@ -87,10 +148,10 @@ public class TrafficLightsService {
 
             this.transitionTime = 0;
             this.currentPhaseTimer = 0;
-            this.lightPhase = this.nextLightPhase;
+            this.currentLightPhase = this.nextLightPhase;
             this.nextLightPhase = null;
         }
-        intersection.updateLights(this.lightPhase, this.lightState);
+        intersection.updateLights(this.currentLightPhase, this.lightState);
     }
 
 

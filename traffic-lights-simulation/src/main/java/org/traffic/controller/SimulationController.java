@@ -1,6 +1,8 @@
 package org.traffic.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -30,6 +32,7 @@ public class SimulationController implements Initializable {
 
     private final ObservableList<Command> commandList = FXCollections.observableArrayList();
     private final Map<Direction, List<TurnDirection>> lanesToAdd = new HashMap<>();
+    private final IntegerProperty simulationTime = new SimpleIntegerProperty(0);
 
     private Stage stage;
 
@@ -57,6 +60,9 @@ public class SimulationController implements Initializable {
     @FXML
     private TextArea outputTextArea;
 
+    @FXML
+    private Label simulationTimeLabel;
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         for (Direction roadSide : Direction.values()) {
@@ -71,7 +77,9 @@ public class SimulationController implements Initializable {
             addLaneDirectionSelector.getItems().add(turnDirection.toString());
 
         commandListView.setItems(commandList);
-        commandListView.setCellFactory(row -> new CommandListCell(commandList));
+        commandListView.setCellFactory(_ -> new CommandListCell(commandList));
+
+        simulationTimeLabel.textProperty().bind(simulationTime.asString());
     }
 
     @FXML
@@ -192,11 +200,12 @@ public class SimulationController implements Initializable {
 
     @FXML
     private void handleRunSimulation() throws IOException {
+        this.simulationTime.set(0);
         var intersection = new Intersection();
         intersection.addLanesToRoad(lanesToAdd);
 
         var simulationInput = new SimulationInput(commandList);
-        var simulator = new TrafficSimulator(intersection);
+        var simulator = new TrafficSimulator(intersection, this.simulationTime);
 
         var simulationOutput = simulator.runSimulation(simulationInput);
 
