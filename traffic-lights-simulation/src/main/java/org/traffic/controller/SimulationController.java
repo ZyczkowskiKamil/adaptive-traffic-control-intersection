@@ -1,6 +1,7 @@
 package org.traffic.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
@@ -62,6 +63,9 @@ public class SimulationController implements Initializable {
 
     @FXML
     private Label simulationTimeLabel;
+
+    @FXML
+    private CheckBox realTimeSimulationCheckbox;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -204,13 +208,26 @@ public class SimulationController implements Initializable {
         var intersection = new Intersection();
         intersection.addLanesToRoad(lanesToAdd);
 
-        var simulationInput = new SimulationInput(commandList);
+        var simulationInput = new SimulationInput(new ArrayList<>(commandList));
         var simulator = new TrafficSimulator(intersection, this.simulationTime);
+        var runRealTimeSimulation = this.realTimeSimulationCheckbox.isSelected();
 
-        var simulationOutput = simulator.runSimulation(simulationInput);
+        Thread thread = new Thread(() -> {
+            try {
+                var simulationOutput = simulator.runSimulation(simulationInput, runRealTimeSimulation);
+                var outputString = simulationParser.toJsonString(simulationOutput);
 
-        var outputString = simulationParser.toJsonString(simulationOutput);
-        this.outputTextArea.setText(outputString);
+                Platform.runLater(() ->
+                        this.outputTextArea.setText(outputString)
+                );
+
+            } catch (JsonProcessingException e) {
+                errorLabel.setText("Simulation failed: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+
+        thread.start();
     }
 
     public void setStage(Stage stage) {

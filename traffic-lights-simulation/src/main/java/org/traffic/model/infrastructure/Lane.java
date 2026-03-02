@@ -89,4 +89,8 @@ public class Lane {
 
         return vehiclesNumber;
     }
+
+    public boolean isEmpty() {
+        return this.vehicles.isEmpty();
+    }
 }

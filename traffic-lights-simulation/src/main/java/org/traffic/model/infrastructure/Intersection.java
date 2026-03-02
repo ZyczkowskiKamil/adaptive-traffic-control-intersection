@@ -35,6 +35,14 @@ public class Intersection {
         road.addVehicle(vehicle);
     }
 
+    public boolean isEmpty() {
+        for (Road road : roadMap.values()) {
+            if (!road.isEmpty())
+                return false;
+        }
+        return true;
+    }
+
     public List<String> makeStepAndGetVehicleIds() {
         List<Vehicle> vehiclesLeavingIntersection = new LinkedList<>();
         for (Road road : roadMap.values()) {

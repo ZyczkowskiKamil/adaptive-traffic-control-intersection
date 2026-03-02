@@ -44,11 +44,11 @@ public class Main {
             SimulationInput simulationInput = parser.parseInput(inputPath);
             var simulator = new TrafficSimulator(new Intersection(), simulationTime);
 
-            SimulationOutput simulationOutput = simulator.runSimulation(simulationInput);
+            SimulationOutput simulationOutput = simulator.runSimulation(simulationInput, false);
 
             parser.saveOutput(outputPath, simulationOutput);
 
-            System.out.println("Simulation time: " + simulationTime);
+            System.out.println("Simulation time: " + simulationTime.get());
         } catch (IOException e) {
             System.err.println("IO Error: " + e.getMessage());
             e.printStackTrace();

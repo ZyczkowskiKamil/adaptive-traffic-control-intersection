@@ -1,6 +1,8 @@
 package org.traffic.service;
 
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
+import org.traffic.model.TickResult;
 import org.traffic.model.dto.*;
 import org.traffic.model.infrastructure.Intersection;
 
@@ -20,15 +22,15 @@ public class TrafficSimulator {
         this.simulationTime = simulationTime;
     }
 
-    public SimulationOutput runSimulation(SimulationInput input) {
+    public SimulationOutput runSimulation(SimulationInput input, boolean realTimeSimulation) {
         var stepStatuses = new ArrayList<StepStatus>();
 
         for (Command command : input.commands()) {
             if (command.type() == CommandType.ADD_VEHICLE) {
                 handleAddVehicle(command);
             } else if (command.type() == CommandType.STEP) {
-                List<String> leavingVehiclesIds = handleStepCommandAndGetLeavingVehiclesIds();
-                stepStatuses.add(new StepStatus(leavingVehiclesIds));
+                StepStatus stepStatus = handleStepCommand(realTimeSimulation);
+                stepStatuses.add(stepStatus);
             } else {
                 System.err.println("Bad command type: " + command.type());
             }
@@ -37,22 +39,71 @@ public class TrafficSimulator {
         return new SimulationOutput(stepStatuses);
     }
 
+    /**
+     * Return step status only when light state is ACTIVE
+     * If any cars are on intersection make sure that any of them makes move
+     */
+    private StepStatus handleStepCommand(boolean realTimeSimulation) {
+        TickResult tickResult = performTick(realTimeSimulation);
+
+        while (!(tickResult.isLightStateActive() && (tickResult.intersectionIsEmpty() || !tickResult.leavingVehicleIds().isEmpty()))) {
+            tickResult = performTick(realTimeSimulation);
+        }
+
+        List<String> leavingVehiclesIds = tickResult.leavingVehicleIds();
+        return new StepStatus(leavingVehiclesIds);
+    }
+
     private void handleAddVehicle(Command command) {
         var vehicle = command.toVehicle();
         intersection.addVehicle(vehicle);
     }
 
-    private List<String> handleStepCommandAndGetLeavingVehiclesIds() {
-        do {
-            trafficLightsService.handleSimulationStep();
-            increaseSimulationTime(1);
-        } while (!trafficLightsService.canCarGo());
+    private void sleepIfRealTime(boolean realTimeSimulation) {
+        if (realTimeSimulation) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
-        return intersection.makeStepAndGetVehicleIds();
+    /**
+     * Return leaving vehicles only when intersection state is active
+     * If leaving vehicles is empty
+     * @return
+     */
+    private TickResult performTick(boolean realTimeSimulation) {
+        trafficLightsService.handleSimulationStep();
+        increaseSimulationTime(1);
+
+        boolean isLightStateActive = trafficLightsService.isLightTransitionStateActive();
+        List<String> leavingVehicles = new ArrayList<>();
+
+        if (isLightStateActive) {
+            leavingVehicles = intersection.makeStepAndGetVehicleIds();
+        }
+
+        sleepIfRealTime(realTimeSimulation);
+
+        return new TickResult(leavingVehicles, isLightStateActive, intersection.isEmpty());
     }
 
     public void increaseSimulationTime(int time) {
-        this.simulationTime.set(this.simulationTime.get() + time);
+        int newTime = this.simulationTime.get() + time;
+
+        try {
+            if (Platform.isFxApplicationThread()) { // check if on fx thread
+                this.simulationTime.set(newTime);
+            } else { // try sending to fx thread
+                Platform.runLater(() ->
+                        this.simulationTime.set(newTime)
+                );
+            }
+        } catch (IllegalStateException e) { // could not find fx thread - we are in CLI mode
+            this.simulationTime.set(newTime);
+        }
     }
 
 

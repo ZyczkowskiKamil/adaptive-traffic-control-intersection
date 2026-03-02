@@ -137,6 +137,14 @@ public class Road {
         return carsThatCanGo;
     }
 
+    public boolean isEmpty() {
+        for (Lane lane : lanes) {
+            if (!lane.isEmpty())
+                return false;
+        }
+        return true;
+    }
+
     public List<Lane> getLanes() {
         return Collections.unmodifiableList(this.lanes);
     }

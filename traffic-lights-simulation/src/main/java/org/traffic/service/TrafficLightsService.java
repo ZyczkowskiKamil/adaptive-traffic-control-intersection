@@ -131,7 +131,7 @@ public class TrafficLightsService {
         }
     }
 
-    public boolean canCarGo() {
+    public boolean isLightTransitionStateActive() {
         return this.lightState == LightTransitionState.ACTIVE;
     }
 
