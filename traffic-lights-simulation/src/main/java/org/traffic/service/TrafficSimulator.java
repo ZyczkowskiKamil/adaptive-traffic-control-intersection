@@ -1,8 +1,5 @@
 package org.traffic.service;
 
-import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.StringProperty;
 import org.traffic.model.TickResult;
 import org.traffic.model.dto.*;
 import org.traffic.model.infrastructure.Direction;
@@ -12,20 +9,28 @@ import org.traffic.model.infrastructure.Road;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 public class TrafficSimulator {
 
     private final TrafficLightsService trafficLightsService;
     private final Intersection intersection;
 
-    private final IntegerProperty simulationTime;
-    private final StringProperty outputString;
+    private final IntSupplier getSimulationTime;
+    private final IntConsumer setSimulationTime;
+    private final Consumer<String> setOutputString;
 
-    public TrafficSimulator(Intersection intersection, IntegerProperty simulationTime, StringProperty outputString) {
+    private String currentOutputText = "";
+
+    public TrafficSimulator(Intersection intersection, IntSupplier getSimulationTime, IntConsumer setSimulationTime, Consumer<String> setOutputString) {
         this.intersection = intersection;
-        this.trafficLightsService = new TrafficLightsService(intersection, simulationTime);
-        this.simulationTime = simulationTime;
-        this.outputString = outputString;
+        this.getSimulationTime = getSimulationTime;
+        this.setSimulationTime = setSimulationTime;
+        this.setOutputString = setOutputString;
+
+        this.trafficLightsService = new TrafficLightsService(intersection, getSimulationTime);
     }
 
     public SimulationOutput runSimulation(SimulationInput input, boolean realTimeSimulation) {
@@ -34,7 +39,7 @@ public class TrafficSimulator {
         for (Command command : input.commands()) {
             if (command.type() == CommandType.ADD_VEHICLE) {
                 handleAddVehicle(command);
-                updateOutputString();
+                updateOutputString(realTimeSimulation);
             } else if (command.type() == CommandType.STEP) {
                 StepStatus stepStatus = handleStepCommand(realTimeSimulation);
                 stepStatuses.add(stepStatus);
@@ -46,7 +51,7 @@ public class TrafficSimulator {
         return new SimulationOutput(stepStatuses);
     }
 
-    private void updateOutputString() {
+    private void updateOutputString(boolean realTimeSimulation) {
         StringBuilder currentState = new StringBuilder();
 
         Map<Direction, Road> roadMap = this.intersection.getRoadMap();
@@ -69,10 +74,9 @@ public class TrafficSimulator {
                     .append('\n');
         }
 
-        this.outputString.setValue(
-                outputString + currentState.toString() + "\n\n"
-        );
+        this.currentOutputText = this.currentOutputText + currentState.toString() + "\n\n";
 
+        this.setOutputString.accept(this.currentOutputText);
     }
 
     /**
@@ -108,7 +112,6 @@ public class TrafficSimulator {
     /**
      * Return leaving vehicles only when intersection state is active
      * If leaving vehicles is empty
-     * @return
      */
     private TickResult performTick(boolean realTimeSimulation) {
         trafficLightsService.handleSimulationStep();
@@ -121,26 +124,15 @@ public class TrafficSimulator {
             leavingVehicles = intersection.makeStepAndGetVehicleIds();
         }
 
-        updateOutputString();
+        updateOutputString(realTimeSimulation);
         sleepIfRealTime(realTimeSimulation);
 
         return new TickResult(leavingVehicles, isLightStateActive, intersection.isEmpty());
     }
 
     public void increaseSimulationTime(int time) {
-        int newTime = this.simulationTime.get() + time;
-
-        try {
-            if (Platform.isFxApplicationThread()) { // check if on fx thread
-                this.simulationTime.set(newTime);
-            } else { // try sending to fx thread
-                Platform.runLater(() ->
-                        this.simulationTime.set(newTime)
-                );
-            }
-        } catch (IllegalStateException e) { // could not find fx thread - we are in CLI mode
-            this.simulationTime.set(newTime);
-        }
+        int newTime = this.getSimulationTime.getAsInt() + time;
+        this.setSimulationTime.accept(newTime);
     }
 
 

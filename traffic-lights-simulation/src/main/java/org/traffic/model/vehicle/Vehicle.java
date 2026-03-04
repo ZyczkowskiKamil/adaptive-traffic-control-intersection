@@ -14,6 +14,9 @@ public record Vehicle(
         TurnDirection turnDirection) {
 
     public Vehicle(@NotNull String vehicleId, Direction startRoad, Direction endRoad) {
+        if (startRoad == endRoad) {
+            throw new IllegalArgumentException("startRoad and endRoad must be different");
+        }
         this(vehicleId, startRoad, endRoad, calculateVehicleTurnDirection(startRoad, endRoad));
     }
 

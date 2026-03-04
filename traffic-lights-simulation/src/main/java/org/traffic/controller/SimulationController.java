@@ -213,8 +213,14 @@ public class SimulationController implements Initializable {
         intersection.addLanesToRoad(lanesToAdd);
 
         var simulationInput = new SimulationInput(new ArrayList<>(commandList));
-        var simulator = new TrafficSimulator(intersection, this.simulationTime, this.outputText);
         var runRealTimeSimulation = this.realTimeSimulationCheckbox.isSelected();
+
+        var simulator = new TrafficSimulator(
+                intersection,
+                simulationTime::get,
+                value -> Platform.runLater(() -> this.simulationTime.set(value)),
+                text -> Platform.runLater(() -> this.outputText.set(text))
+        );
 
         Thread thread = new Thread(() -> {
             try {
@@ -226,7 +232,9 @@ public class SimulationController implements Initializable {
                 );
 
             } catch (JsonProcessingException e) {
-                errorLabel.setText("Simulation failed: " + e.getMessage());
+                Platform.runLater(() ->
+                        errorLabel.setText("Simulation failed: " + e.getMessage()));
+
                 e.printStackTrace();
             }
         });
