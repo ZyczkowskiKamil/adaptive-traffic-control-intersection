@@ -148,4 +148,14 @@ public class Road {
     public List<Lane> getLanes() {
         return Collections.unmodifiableList(this.lanes);
     }
+
+    public int getVehicleCount() {
+        return lanes.stream()
+                .mapToInt(Lane::getVehicleCount)
+                .sum();
+    }
+
+    public LightSet getLightSet() {
+        return this.trafficLights.getLightSet();
+    }
 }

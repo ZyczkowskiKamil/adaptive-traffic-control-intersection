@@ -3,6 +3,8 @@ package org.traffic;
 import javafx.application.Application;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import org.traffic.gui.SimulationGui;
 import org.traffic.model.dto.SimulationInput;
 import org.traffic.model.dto.SimulationOutput;
@@ -12,6 +14,9 @@ import org.traffic.utils.SimulationParser;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.IntSupplier;
 
 public class Main {
     static void main(String[] args) {
@@ -30,7 +35,7 @@ public class Main {
             System.err.println("App usage:");
             System.err.println("  Console mode: java --enable-native-access=ALL-UNNAMED -jar sim.jar <input.json> <output.json>");
             System.err.println("  GUI mode: App usage: java --enable-native-access=ALL-UNNAMED -jar sim.jar --gui");
-            return;
+            System.exit(1);
         }
 
         String inputPath = args[0];
@@ -39,10 +44,17 @@ public class Main {
         var parser = new SimulationParser();
 
         try {
-            IntegerProperty simulationTime = new SimpleIntegerProperty(0);
+            AtomicInteger simulationTime = new AtomicInteger(0);
+            AtomicReference<String> outputText = new AtomicReference<>("");
 
             SimulationInput simulationInput = parser.parseInput(inputPath);
-            var simulator = new TrafficSimulator(new Intersection(), simulationTime);
+
+            var simulator = new TrafficSimulator(
+                    new Intersection(),
+                    simulationTime::get,
+                    simulationTime::set,
+                    outputText::set
+            );
 
             SimulationOutput simulationOutput = simulator.runSimulation(simulationInput, false);
 

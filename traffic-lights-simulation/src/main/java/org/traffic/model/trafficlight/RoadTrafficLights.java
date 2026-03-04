@@ -38,6 +38,13 @@ public class RoadTrafficLights {
                 this.rightColor = (lightSet.rightLight()==TrafficLightColor.GREEN) ? TrafficLightColor.RED_YELLOW : TrafficLightColor.RED;
             }
         }
+    }
 
+    public LightSet getLightSet() {
+        return new LightSet(
+                this.leftColor,
+                this.straightColor,
+                this.rightColor
+        );
     }
 }

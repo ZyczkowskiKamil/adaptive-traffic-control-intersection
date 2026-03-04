@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -34,6 +36,7 @@ public class SimulationController implements Initializable {
     private final ObservableList<Command> commandList = FXCollections.observableArrayList();
     private final Map<Direction, List<TurnDirection>> lanesToAdd = new HashMap<>();
     private final IntegerProperty simulationTime = new SimpleIntegerProperty(0);
+    private final StringProperty addToSimulationLog = new SimpleStringProperty("");
 
     private Stage stage;
 
@@ -62,6 +65,9 @@ public class SimulationController implements Initializable {
     private TextArea outputTextArea;
 
     @FXML
+    private TextArea simulationLogTextArea;
+
+    @FXML
     private Label simulationTimeLabel;
 
     @FXML
@@ -84,6 +90,11 @@ public class SimulationController implements Initializable {
         commandListView.setCellFactory(_ -> new CommandListCell(commandList));
 
         simulationTimeLabel.textProperty().bind(simulationTime.asString());
+
+        addToSimulationLog.addListener((observableValue, oldVal, newVal) -> {
+            simulationLogTextArea.appendText(newVal + '\n');
+            simulationLogTextArea.setScrollTop(Double.MAX_VALUE);
+        });
     }
 
     @FXML
@@ -158,7 +169,7 @@ public class SimulationController implements Initializable {
         }
     }
 
-    private void saveJsonStringToFile(String jsonContent) {
+    private void saveJsonStringToFile(String jsonContent, String filenameSuggestion) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose save destination");
 
@@ -166,7 +177,7 @@ public class SimulationController implements Initializable {
                 new FileChooser.ExtensionFilter("JSON files (*.json)", "*.json")
         );
 
-        fileChooser.setInitialFileName("input.json");
+        fileChooser.setInitialFileName(filenameSuggestion);
 
         File fileToSave = fileChooser.showSaveDialog(stage);
 
@@ -188,7 +199,7 @@ public class SimulationController implements Initializable {
             var simulationInput = new SimulationInput(commandList);
             String jsonContent = simulationParser.toJsonString(simulationInput);
 
-            saveJsonStringToFile(jsonContent);
+            saveJsonStringToFile(jsonContent, "input.json");
         } catch (JsonProcessingException e) {
             this.errorLabel.setText("Failed to export configuration");
             System.err.println("Export simulation file failed");
@@ -197,20 +208,60 @@ public class SimulationController implements Initializable {
 
     @FXML
     private void handleSaveOutput() {
-        String content = this.outputTextArea.toString();
+        String content = this.outputTextArea.getText();
 
-        saveJsonStringToFile(content);
+        saveJsonStringToFile(content, "output.json");
     }
 
     @FXML
-    private void handleRunSimulation() throws IOException {
+    private void handleSaveSimulationLog() {
+        String content = this.simulationLogTextArea.getText();
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose save destination");
+
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Log files (*.log)", "*.log")
+        );
+
+        fileChooser.setInitialFileName("simulation.log");
+
+        File fileToSave = fileChooser.showSaveDialog(stage);
+
+        if (fileToSave != null) {
+            try {
+                Path path = fileToSave.toPath();
+                Files.writeString(path, content);
+            } catch (IOException e) {
+                this.errorLabel.setText("Error saving log file");
+                System.err.println("Error saving log file");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void resetOutputViewForNewSimulation() {
+        this.simulationLogTextArea.setText("");
+        this.outputTextArea.setText("");
         this.simulationTime.set(0);
+    }
+
+    @FXML
+    private void handleRunSimulation() {
+        resetOutputViewForNewSimulation();
+
         var intersection = new Intersection();
         intersection.addLanesToRoad(lanesToAdd);
 
         var simulationInput = new SimulationInput(new ArrayList<>(commandList));
-        var simulator = new TrafficSimulator(intersection, this.simulationTime);
         var runRealTimeSimulation = this.realTimeSimulationCheckbox.isSelected();
+
+        var simulator = new TrafficSimulator(
+                intersection,
+                simulationTime::get,
+                value -> Platform.runLater(() -> this.simulationTime.set(value)),
+                text -> Platform.runLater(() -> this.addToSimulationLog.set(text))
+        );
 
         Thread thread = new Thread(() -> {
             try {
@@ -222,7 +273,9 @@ public class SimulationController implements Initializable {
                 );
 
             } catch (JsonProcessingException e) {
-                errorLabel.setText("Simulation failed: " + e.getMessage());
+                Platform.runLater(() ->
+                        errorLabel.setText("Simulation failed: " + e.getMessage()));
+
                 e.printStackTrace();
             }
         });

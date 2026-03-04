@@ -7,6 +7,7 @@ import org.traffic.model.trafficlight.LightPhase;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.IntSupplier;
 
 public class TrafficLightsService {
     private static final int MIN_ACTIVE_PHASE_TIME = 3;
@@ -23,9 +24,9 @@ public class TrafficLightsService {
     private static final LightPhase BEGINNING_LIGHT_PHASE = LightPhase.NS_STRAIGHT_RIGHT;
     private static final LightTransitionState BEGINNING_LIGHT_STATE = LightTransitionState.ACTIVE;
 
-    private final IntegerProperty simulationTime;
-
     private final Intersection intersection;
+    private final IntSupplier getSimulationTime;
+
     private LightPhase currentLightPhase;
     private LightPhase nextLightPhase;
     private LightTransitionState lightState;
@@ -33,11 +34,12 @@ public class TrafficLightsService {
     private int currentPhaseTimer = 0;
     private int transitionTime = 0;
 
+
     private final Map<LightPhase,Integer> lightPhaseLastTimeActive;
 
-    public TrafficLightsService(Intersection intersection, IntegerProperty simulationTime) {
+    public TrafficLightsService(Intersection intersection, IntSupplier getSimulationTime) {
         this.intersection = intersection;
-        this.simulationTime = simulationTime;
+        this.getSimulationTime = getSimulationTime;
 
         this.currentLightPhase = BEGINNING_LIGHT_PHASE;
         this.lightState = BEGINNING_LIGHT_STATE;
@@ -109,7 +111,7 @@ public class TrafficLightsService {
 
     private int lightPhaseTimeFromLastActive(LightPhase lightPhase) {
         int lastActive = lightPhaseLastTimeActive.get(lightPhase);
-        return this.simulationTime.get() - lastActive;
+        return this.getSimulationTime.getAsInt() - lastActive;
     }
 
     /**
@@ -120,8 +122,10 @@ public class TrafficLightsService {
      * </p>
      */
     public void handleSimulationStep() {
+        System.out.println(this.lightState);
+
         if (this.lightState == LightTransitionState.ACTIVE) {
-            lightPhaseLastTimeActive.put(currentLightPhase, simulationTime.get());
+            lightPhaseLastTimeActive.put(currentLightPhase, getSimulationTime.getAsInt());
             currentPhaseTimer++;
             calculateNextLightPhase();
         }
@@ -154,5 +158,12 @@ public class TrafficLightsService {
         intersection.updateLights(this.currentLightPhase, this.lightState);
     }
 
+    public LightTransitionState getLightTransitionState() {
+        return this.lightState;
+    }
+
+    public LightPhase getLightPhase() {
+        return this.currentLightPhase;
+    }
 
 }
