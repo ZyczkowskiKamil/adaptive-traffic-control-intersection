@@ -255,11 +255,12 @@ The `Main` class - launches the program in CLI or GUI mode depending on selected
 
 ## TODO
 
+(I already fixed some things after making git bundle (e.g. problem with overlapping threads))
+
 List of thing to consider:
 - Better test coverage(currently around 35%)
 - Better name for Direction - maybe for CardinalDirection?
 - Improve GUI
-- Do something with increaseSimulationTime simulationTime in TrafficSimulator(it should know anything about javafx) - maybe some listener for simulationTime?
 - Better exception handling:
   - Loading wrong file as input
   - Adding vehicle going to it's start road(e.g. NORTH -> NORTH)

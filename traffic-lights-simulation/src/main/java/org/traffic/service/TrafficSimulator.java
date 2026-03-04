@@ -20,15 +20,13 @@ public class TrafficSimulator {
 
     private final IntSupplier getSimulationTime;
     private final IntConsumer setSimulationTime;
-    private final Consumer<String> setOutputString;
+    private final Consumer<String> addToSimulationLog;
 
-    private String currentOutputText = "";
-
-    public TrafficSimulator(Intersection intersection, IntSupplier getSimulationTime, IntConsumer setSimulationTime, Consumer<String> setOutputString) {
+    public TrafficSimulator(Intersection intersection, IntSupplier getSimulationTime, IntConsumer setSimulationTime, Consumer<String> addToSimulationLog) {
         this.intersection = intersection;
         this.getSimulationTime = getSimulationTime;
         this.setSimulationTime = setSimulationTime;
-        this.setOutputString = setOutputString;
+        this.addToSimulationLog = addToSimulationLog;
 
         this.trafficLightsService = new TrafficLightsService(intersection, getSimulationTime);
     }
@@ -38,11 +36,14 @@ public class TrafficSimulator {
 
         for (Command command : input.commands()) {
             if (command.type() == CommandType.ADD_VEHICLE) {
+                addToSimulationLog.accept("ADD_VEHICLE");
                 handleAddVehicle(command);
-                updateOutputString(realTimeSimulation);
+                updateLatestSimulationLog();
             } else if (command.type() == CommandType.STEP) {
+                addToSimulationLog.accept("STEP");
                 StepStatus stepStatus = handleStepCommand(realTimeSimulation);
                 stepStatuses.add(stepStatus);
+                addToSimulationLog.accept("Leaving vehicles: " + stepStatus.toString() + '\n');
             } else {
                 System.err.println("Bad command type: " + command.type());
             }
@@ -51,12 +52,13 @@ public class TrafficSimulator {
         return new SimulationOutput(stepStatuses);
     }
 
-    private void updateOutputString(boolean realTimeSimulation) {
+    private void updateLatestSimulationLog() {
         StringBuilder currentState = new StringBuilder();
 
         Map<Direction, Road> roadMap = this.intersection.getRoadMap();
         currentState
-                .append("Phase: ")
+                .append(this.getSimulationTime.getAsInt())
+                .append(" Phase: ")
                 .append(this.trafficLightsService.getLightPhase())
                 .append(" State: ")
                 .append(this.trafficLightsService.getLightTransitionState())
@@ -74,9 +76,7 @@ public class TrafficSimulator {
                     .append('\n');
         }
 
-        this.currentOutputText = this.currentOutputText + currentState.toString() + "\n\n";
-
-        this.setOutputString.accept(this.currentOutputText);
+        this.addToSimulationLog.accept(currentState.toString());
     }
 
     /**
@@ -124,7 +124,7 @@ public class TrafficSimulator {
             leavingVehicles = intersection.makeStepAndGetVehicleIds();
         }
 
-        updateOutputString(realTimeSimulation);
+        updateLatestSimulationLog();
         sleepIfRealTime(realTimeSimulation);
 
         return new TickResult(leavingVehicles, isLightStateActive, intersection.isEmpty());

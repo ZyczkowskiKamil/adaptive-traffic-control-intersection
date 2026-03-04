@@ -122,6 +122,8 @@ public class TrafficLightsService {
      * </p>
      */
     public void handleSimulationStep() {
+        System.out.println(this.lightState);
+
         if (this.lightState == LightTransitionState.ACTIVE) {
             lightPhaseLastTimeActive.put(currentLightPhase, getSimulationTime.getAsInt());
             currentPhaseTimer++;
